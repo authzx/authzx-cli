@@ -31,10 +31,12 @@ var loginCmd = &cobra.Command{
 			cloudURL = urlInput
 		}
 
-		if err := credentials.Save(&credentials.Credentials{
+		creds := &credentials.Credentials{
 			APIKey:   apiKey,
 			CloudURL: cloudURL,
-		}); err != nil {
+		}
+
+		if err := credentials.Save(creds); err != nil {
 			return fmt.Errorf("failed to save credentials: %w", err)
 		}
 
