@@ -72,14 +72,14 @@ After running, you can immediately test authorization checks.
 Pass --cleanup to remove the sample data previously created by quickstart.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		creds, err := credentials.Load()
+		apiKey, err := credentials.Resolve(rootAPIKey)
 		if err != nil {
 			return err
 		}
 
 		c := &apiClient{
-			apiKey:  creds.APIKey,
-			baseURL: creds.CloudURL,
+			apiKey:  apiKey,
+			baseURL: credentials.Endpoint(),
 			http:    &http.Client{Timeout: 30 * time.Second},
 		}
 
@@ -87,12 +87,13 @@ Pass --cleanup to remove the sample data previously created by quickstart.`,
 			return runCleanup(c)
 		}
 
-		return runQuickstart(c, creds)
+		return runQuickstart(c)
 	},
 }
 
-func runQuickstart(c *apiClient, creds *credentials.Credentials) error {
-	fmt.Println("Creating sample authorization model...\n")
+func runQuickstart(c *apiClient) error {
+	fmt.Println("Creating sample authorization model...")
+	fmt.Println()
 
 	sd := &sampleData{}
 
@@ -284,7 +285,9 @@ func runQuickstart(c *apiClient, creds *credentials.Credentials) error {
 		return fmt.Errorf("failed to assign role to subject: %w", err)
 	}
 
-	fmt.Println("\nSample data created successfully!\n")
+	fmt.Println()
+	fmt.Println("Sample data created successfully!")
+	fmt.Println()
 	fmt.Println("Try it:")
 	fmt.Printf("  authzx check --subject %s --action read --resource %s\n", s1ID, r1ID)
 	fmt.Printf("    → Alice (editor) can read Engineering Wiki — \033[32mALLOWED\033[0m\n\n")
@@ -307,7 +310,8 @@ func runCleanup(c *apiClient) error {
 		return fmt.Errorf("failed to read sample data: %w", err)
 	}
 
-	fmt.Println("Cleaning up sample data...\n")
+	fmt.Println("Cleaning up sample data...")
+	fmt.Println()
 
 	// Deletion order (reverse of creation):
 	// policies (removes assignments) → subjects → roles → resources → resource type → application

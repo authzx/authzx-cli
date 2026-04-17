@@ -1,59 +1,53 @@
 # AuthzX CLI
 
-Command-line tool for [AuthzX](https://authzx.com) — evaluate authorization checks, manage policies, and run the local agent.
+Command-line tool for [AuthzX](https://authzx.com) — configure an API key and run authorization checks from the shell.
 
 ## Install
 
-```bash
-# Homebrew
-brew install authzx/tap/authzx
+Requires Go 1.21+.
 
-# Go
+```bash
 go install github.com/authzx/authzx-cli/cmd/authzx@latest
 ```
+
+Pre-built binaries and `brew install` support are planned for a future release.
 
 ## Quickstart
 
 ```bash
-# Store your API key
-authzx login
+# Store your API key (paste when prompted — input is masked)
+authzx configure
 
-# Test a policy check
-authzx check --subject user:123 --action read --resource document:456
-
-# ALLOWED
-#   Reason: role_match
-#   Policy: pol_abc
-#   Path:   role
+# Run an authorization check
+authzx check --subject user-123 --resource doc-456 --action read
+# allowed: true  (direct access)
 ```
 
 ## Commands
 
-### `authzx login`
+### `authzx configure`
 
-Store API key and cloud URL in `~/.authzx/credentials`.
+Interactively store an AuthzX API key at `~/.authzx/config.yaml`. Input is
+masked; the file is written with mode `0600` inside a `0700` directory.
 
-```bash
-authzx login
-# API Key: azx_...
-# Cloud URL [https://api.authzx.com]:
+```
+$ authzx configure
+AuthzX API Key: ****
+Saved to ~/.authzx/config.yaml
 ```
 
-### `authzx logout`
-
-Remove stored credentials.
+Get a key from the AuthzX console under **Settings → API Keys**. API keys
+start with `azx_`. Do not paste an OAuth client secret (which starts with
+`azx_cs_`) — the CLI will refuse it.
 
 ### `authzx check`
 
-Authorize an authorization check against cloud or local agent.
+Run a single authorization check.
 
 ```bash
-authzx check \
-  --subject user:123 \
-  --action read \
-  --resource document:456
+authzx check --subject user-123 --resource doc-456 --action read
 
-# With roles and context
+# With subject/resource types, roles, and context
 authzx check \
   --subject user:123 \
   --action read \
@@ -61,51 +55,32 @@ authzx check \
   --roles editor,viewer \
   --context '{"ip":"10.0.0.1"}'
 
-# Against local agent instead of cloud
-authzx check \
-  --subject user:123 \
-  --action read \
-  --resource document:456 \
-  --local
-```
-
-### `authzx policies list`
-
-List all policies for your tenant.
-
-### `authzx policies get <id>`
-
-Get details of a specific policy.
-
-### `authzx agent start`
-
-Start the AuthzX agent locally. Requires the `authzx-agent` binary in PATH.
-
-```bash
-authzx agent start
-authzx agent start --config ./my-config.yaml --listen 0.0.0.0:8181
-```
-
-### `authzx agent status`
-
-Check if the local agent is running and healthy.
-
-```bash
-authzx agent status
-# Agent is running at 127.0.0.1:8181
+# Against a locally-running AuthzX agent
+authzx check --subject user:123 --action read --resource document:456 --local
 ```
 
 ### `authzx version`
 
 Print the CLI version.
 
-## Credentials
+## Authentication
 
-Stored at `~/.authzx/credentials`:
+When a command needs an API key, the CLI resolves it in this order (first
+match wins):
 
-```json
-{
-  "api_key": "azx_...",
-  "cloud_url": "https://api.authzx.com"
-}
+1. `--api-key` flag
+2. `AUTHZX_API_KEY` environment variable
+3. `api_key` from `~/.authzx/config.yaml`
+
+If none is set, commands print: `Not authenticated. Run 'authzx configure'
+or set AUTHZX_API_KEY.`
+
+## Config file
+
+`~/.authzx/config.yaml`:
+
+```yaml
+api_key: azx_...
 ```
+
+File mode: `0600`. Directory mode: `0700`.

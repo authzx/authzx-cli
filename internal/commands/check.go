@@ -24,14 +24,17 @@ var (
 var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Run an authorization check",
-	Long: `Run an authorization check against cloud or local agent.
+	Long: `Run an authorization check against the AuthzX cloud (or a local agent).
 
 Examples:
-  authzx check --subject 72a9b754-5034-45f7-bfca-5e6b47943a23 --action read --resource 2abebabe-74f8-4bb7-b14b-f9500b7c496d
+  authzx check --subject user-123 --resource doc-456 --action read
   authzx check --subject user:123 --action read --resource document:456
-  authzx check --subject user:123 --action read --resource document:456 --roles editor,viewer --local`,
+  authzx check --subject user:123 --action read --resource document:456 \
+               --roles editor,viewer --context '{"ip":"10.0.0.1"}'
+  authzx check --subject user:123 --action read --resource document:456 --local`,
+	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Parse subject — accepts "id" or "type:id"
+		// Parse subject — accepts "id" or "type:id".
 		var subject authzx.Subject
 		if parts := strings.SplitN(checkSubject, ":", 2); len(parts) == 2 {
 			subject = authzx.Subject{ID: parts[1], Type: parts[0]}
@@ -42,7 +45,7 @@ Examples:
 			subject.Roles = strings.Split(checkRoles, ",")
 		}
 
-		// Parse resource — accepts "id" or "type:id"
+		// Parse resource — accepts "id" or "type:id".
 		var resource authzx.Resource
 		if parts := strings.SplitN(checkResource, ":", 2); len(parts) == 2 {
 			resource = authzx.Resource{ID: parts[1], Type: parts[0]}
@@ -61,11 +64,11 @@ Examples:
 		if checkLocal {
 			client = authzx.NewClient("", authzx.WithBaseURL("http://localhost:8181"))
 		} else {
-			creds, err := credentials.Load()
+			apiKey, err := credentials.Resolve(rootAPIKey)
 			if err != nil {
 				return err
 			}
-			client = authzx.NewClient(creds.APIKey, authzx.WithBaseURL(creds.CloudURL))
+			client = authzx.NewClient(apiKey, authzx.WithBaseURL(credentials.Endpoint()))
 		}
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -81,19 +84,23 @@ Examples:
 			return fmt.Errorf("authorization failed: %w", err)
 		}
 
+		out := cmd.OutOrStdout()
+		verdict := "denied"
 		if resp.Allowed {
-			fmt.Println("\033[32mALLOWED\033[0m")
-		} else {
-			fmt.Println("\033[31mDENIED\033[0m")
+			verdict = "allowed"
 		}
-		fmt.Printf("  Reason: %s\n", resp.Reason)
-		if resp.PolicyID != "" {
-			fmt.Printf("  Policy: %s\n", resp.PolicyID)
-		}
+		// Short form: single line that's grep/awk friendly.
 		if resp.AccessPath != "" {
-			fmt.Printf("  Path:   %s\n", resp.AccessPath)
+			fmt.Fprintf(out, "%s: %t  (%s)\n", verdict, resp.Allowed, resp.AccessPath)
+		} else {
+			fmt.Fprintf(out, "%s: %t\n", verdict, resp.Allowed)
 		}
-
+		if resp.Reason != "" {
+			fmt.Fprintf(out, "  reason: %s\n", resp.Reason)
+		}
+		if resp.PolicyID != "" {
+			fmt.Fprintf(out, "  policy: %s\n", resp.PolicyID)
+		}
 		return nil
 	},
 }
@@ -105,7 +112,7 @@ func init() {
 	checkCmd.Flags().StringVar(&checkRoles, "roles", "", "Comma-separated roles")
 	checkCmd.Flags().StringVar(&checkContext, "context", "", "JSON context object")
 	checkCmd.Flags().BoolVar(&checkLocal, "local", false, "Use local agent (localhost:8181)")
-	checkCmd.MarkFlagRequired("subject")
-	checkCmd.MarkFlagRequired("action")
-	checkCmd.MarkFlagRequired("resource")
+	_ = checkCmd.MarkFlagRequired("subject")
+	_ = checkCmd.MarkFlagRequired("action")
+	_ = checkCmd.MarkFlagRequired("resource")
 }
