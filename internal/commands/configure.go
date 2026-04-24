@@ -14,7 +14,7 @@ import (
 
 // readSecret prompts with the given label and reads a line from stdin with
 // echo suppressed when stdin is a terminal. Falls back to a plain line read
-// if stdin is piped (e.g. `echo $KEY | authzx configure`).
+// if stdin is piped (e.g. `echo $KEY | azx configure`).
 func readSecret(prompt string) (string, error) {
 	fmt.Fprint(os.Stderr, prompt)
 	if term.IsTerminal(int(os.Stdin.Fd())) {

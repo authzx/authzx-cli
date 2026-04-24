@@ -289,13 +289,13 @@ func runQuickstart(c *apiClient) error {
 	fmt.Println("Sample data created successfully!")
 	fmt.Println()
 	fmt.Println("Try it:")
-	fmt.Printf("  authzx check --subject %s --action read --resource %s\n", s1ID, r1ID)
+	fmt.Printf("  azx check --subject %s --action read --resource %s\n", s1ID, r1ID)
 	fmt.Printf("    → Alice (editor) can read Engineering Wiki — \033[32mALLOWED\033[0m\n\n")
-	fmt.Printf("  authzx check --subject %s --action write --resource %s\n", s2ID, r1ID)
+	fmt.Printf("  azx check --subject %s --action write --resource %s\n", s2ID, r1ID)
 	fmt.Printf("    → Bob (viewer) cannot write Engineering Wiki — \033[31mDENIED\033[0m\n\n")
-	fmt.Printf("  authzx check --subject %s --action delete --resource %s\n", s1ID, r1ID)
+	fmt.Printf("  azx check --subject %s --action delete --resource %s\n", s1ID, r1ID)
 	fmt.Printf("    → Alice (editor) cannot delete — \033[31mDENIED\033[0m\n\n")
-	fmt.Println("When you're done, clean up with: authzx quickstart --cleanup")
+	fmt.Println("When you're done, clean up with: azx quickstart --cleanup")
 
 	return nil
 }

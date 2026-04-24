@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	authzx "github.com/authzx/authzx-go"
 	"github.com/authzx/authzx-cli/internal/credentials"
+	authzx "github.com/authzx/authzx-go"
 	"github.com/spf13/cobra"
 )
 
@@ -27,11 +27,11 @@ var checkCmd = &cobra.Command{
 	Long: `Run an authorization check against the AuthzX cloud (or a local agent).
 
 Examples:
-  authzx check --subject user-123 --resource doc-456 --action read
-  authzx check --subject user:123 --action read --resource document:456
-  authzx check --subject user:123 --action read --resource document:456 \
+  azx check --subject user-123 --resource doc-456 --action read
+  azx check --subject user:123 --action read --resource document:456
+  azx check --subject user:123 --action read --resource document:456 \
                --roles editor,viewer --context '{"ip":"10.0.0.1"}'
-  authzx check --subject user:123 --action read --resource document:456 --local`,
+  azx check --subject user:123 --action read --resource document:456 --local`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Parse subject — accepts "id" or "type:id".

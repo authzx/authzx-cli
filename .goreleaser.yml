@@ -1,0 +1,67 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/azx
+    binary: azx
+    env:
+      - CGO_ENABLED=0
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    flags:
+      - -trimpath
+    ldflags:
+      - "-s -w -X github.com/authzx/authzx-cli/internal/commands.Version={{ .Version }}"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - format: tar.gz
+    name_template: "azx_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: "azx_{{ .Version }}_SHA256SUMS"
+  algorithm: sha256
+
+brews:
+  - name: azx
+    repository:
+      owner: authzx
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://authzx.com"
+    description: "AuthzX CLI — authorization management and evaluation"
+    license: "Apache-2.0"
+    install: |
+      bin.install "azx"
+    test: |
+      system "#{bin}/azx", "version"
+    extra_install: ""
+
+release:
+  draft: false
+  prerelease: auto
+  name_template: "azx v{{ .Version }}"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"

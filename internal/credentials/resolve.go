@@ -9,7 +9,7 @@ import (
 
 // ErrNotAuthenticated is returned when no API key can be resolved from any
 // source. Commands should surface its message verbatim.
-var ErrNotAuthenticated = errors.New("not authenticated. Run 'authzx configure' or set AUTHZX_API_KEY")
+var ErrNotAuthenticated = errors.New("not authenticated. Run 'azx configure' or set AUTHZX_API_KEY")
 
 // Resolve returns the API key to use for the current command, applying the
 // v1 precedence order:

@@ -10,13 +10,13 @@ import (
 var rootAPIKey string
 
 var rootCmd = &cobra.Command{
-	Use:   "authzx",
+	Use:   "azx",
 	Short: "AuthzX CLI — authorization management and evaluation",
 	Long: `AuthzX command-line interface.
 
 Get started:
-  authzx configure         # paste your API key
-  authzx check ...         # run an authorization check`,
+  azx configure         # paste your API key
+  azx check ...         # run an authorization check`,
 	SilenceErrors: true,
 }
 
@@ -30,10 +30,6 @@ func init() {
 
 	rootCmd.AddCommand(configureCmd)
 	rootCmd.AddCommand(checkCmd)
-	// TODO: add `agent` command back once scope is locked. Planned v2 surface:
-	//   - authzx agent config   → write a starter YAML with API key prefilled
-	//   - authzx agent status   → hit /healthz on the running agent
-	// Intentionally omitted: start/stop/pull — Docker does those.
-	// rootCmd.AddCommand(agentCmd)
+	rootCmd.AddCommand(agentCmd)
 	rootCmd.AddCommand(versionCmd)
 }
