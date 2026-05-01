@@ -77,7 +77,7 @@ Examples:
 		resp, err := client.Authorize(ctx, &authzx.AuthorizeRequest{
 			Subject:  subject,
 			Resource: resource,
-			Action:   checkAction,
+			Action:   authzx.Action{Name: checkAction},
 			Context:  ctxMap,
 		})
 		if err != nil {
@@ -86,20 +86,25 @@ Examples:
 
 		out := cmd.OutOrStdout()
 		verdict := "denied"
-		if resp.Allowed {
+		if resp.Decision {
 			verdict = "allowed"
 		}
-		// Short form: single line that's grep/awk friendly.
-		if resp.AccessPath != "" {
-			fmt.Fprintf(out, "%s: %t  (%s)\n", verdict, resp.Allowed, resp.AccessPath)
+		var reason, policyID, accessPath string
+		if resp.Context != nil {
+			reason = resp.Context.Reason
+			policyID = resp.Context.PolicyID
+			accessPath = resp.Context.AccessPath
+		}
+		if accessPath != "" {
+			fmt.Fprintf(out, "%s: %t  (%s)\n", verdict, resp.Decision, accessPath)
 		} else {
-			fmt.Fprintf(out, "%s: %t\n", verdict, resp.Allowed)
+			fmt.Fprintf(out, "%s: %t\n", verdict, resp.Decision)
 		}
-		if resp.Reason != "" {
-			fmt.Fprintf(out, "  reason: %s\n", resp.Reason)
+		if reason != "" {
+			fmt.Fprintf(out, "  reason: %s\n", reason)
 		}
-		if resp.PolicyID != "" {
-			fmt.Fprintf(out, "  policy: %s\n", resp.PolicyID)
+		if policyID != "" {
+			fmt.Fprintf(out, "  policy: %s\n", policyID)
 		}
 		return nil
 	},

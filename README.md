@@ -13,6 +13,12 @@ brew tap authzx/tap
 brew install azx
 ```
 
+### Quick install (macOS / Linux)
+
+```bash
+curl -fsSL https://authzx.com/install.sh | sh
+```
+
 ### Binary download
 
 Grab the latest release from [GitHub Releases](https://github.com/authzx/authzx-cli/releases) — binaries available for macOS, Linux, and Windows (amd64/arm64).
